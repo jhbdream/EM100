@@ -851,13 +851,15 @@ int main(int argc, char **argv)
 	if (filename) {
 		int maxlen = desiredchip ? chip->size : 0x4000000; /* largest size - 64MB */
 		void *data = malloc(maxlen);
+		
 		int done;
 		void *readback = NULL;
-
+		
 		if (data == NULL) {
 			printf("FATAL: couldn't allocate memory\n");
 			return 1;
 		}
+		memset(data,0xff,maxlen*sizeof(char));
 		FILE *fdata = fopen(filename, "rb");
 		if (!fdata) {
 			perror("Could not open upload file");
@@ -885,9 +887,9 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		if (desiredchip && (length != (chip->size - spi_start_address)) )
+		if (desiredchip && (length > (chip->size - spi_start_address)) )
 		{
-			printf("FATAL: file size does not match to chip size.\n");
+			printf("FATAL: file size out to chip size.\n");
 			free(data);
 			return 1;
 		}
@@ -908,7 +910,7 @@ int main(int argc, char **argv)
 			}
 			free(readback);
 		} else {
-			write_sdram(&em100, (unsigned char*)data, 0x00000000, length);
+			write_sdram(&em100, (unsigned char*)data, 0x00000000, chip->size);
 		}
 
 		if (verify) {
